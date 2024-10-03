@@ -29,3 +29,6 @@ jobs:
 
       - name: Run PlatformIO build
         run: platformio run
+        
+      - name: Run PlatformIO tests
+        run: platformio test
