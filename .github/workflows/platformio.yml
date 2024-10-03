@@ -1,16 +1,9 @@
 name: PlatformIO CI
 
-# กำหนดเหตุการณ์ที่ทำให้ workflow ทำงาน
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+on: [push, pull_request]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,8 +20,6 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install platformio
 
-      - name: Run PlatformIO build
-        run: platformio run
-        
-      - name: Run PlatformIO tests
-        run: platformio test
+      - name: Build and Test
+        run: |
+          platformio test
