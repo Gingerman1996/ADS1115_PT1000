@@ -11,22 +11,10 @@
  ***************************************************************************/
 #include "main.h"
 
-#include <ADS1115_WE.h>
-#include <Arduino.h>
-#include <Wire.h>
-#include <math.h>
-
-#define I2C_ADDRESS 0x48
-#define PT1000_R_REF 1000.0
-#define VCC_VOLTAGE 3300
-
 TaskHandle_t signal_generate_task = NULL;
 const TickType_t xDelay1000ms = pdMS_TO_TICKS(1000);
 const TickType_t xDelay5000ms = pdMS_TO_TICKS(5000);
 void singal_generate(void *parameter);
-
-#define D3 3
-#define D4 4
 
 int16_t readChannel(ADS1115_MUX channel);
 
@@ -65,8 +53,8 @@ void setup() {
   Wire.begin(7, 6);
   Serial.begin(9600);
 
-  pinMode(D3, OUTPUT);
-  pinMode(D4, OUTPUT);
+  pinMode(D0, OUTPUT);
+  pinMode(D1, OUTPUT);
 
   if (!adc.init()) {
     Serial.println("ADS1115 not connected!");
@@ -169,27 +157,27 @@ void setup() {
 }
 
 void loop() {
-  int16_t val_0 = readChannel(ADS1115_COMP_0_GND);
-  Serial.print("CH 0 value: ");
-  Serial.println(val_0);
-  Serial.print("CH 0 value: ");
-  // Convert analog value to resistance
-  float resistance = ((float)VCC_VOLTAGE * (float)PT1000_R_REF) /
-                     ((float)VCC_VOLTAGE - (float)val_0);
-  Serial.print("CH 0 resistance: ");
-  Serial.println(resistance);
-  // Convert resistance to temperature using linear interpolation
-  float temperature =
-      interpolate(resistance, resistanceTable, temperatureTable,
-                  sizeof(resistanceTable) / sizeof(resistanceTable[0]));
-  // Print temperature to serial monitor
-  Serial.print("Temperature: ");
-  Serial.print(temperature);
-  Serial.println("°C");
+  // int16_t val_0 = readChannel(ADS1115_COMP_0_GND);
+  // Serial.print("CH 0 value: ");
+  // Serial.println(val_0);
+  // Serial.print("CH 0 value: ");
+  // // Convert analog value to resistance
+  // float resistance = ((float)VCC_VOLTAGE * (float)PT1000_R_REF) /
+  //                    ((float)VCC_VOLTAGE - (float)val_0);
+  // Serial.print("CH 0 resistance: ");
+  // Serial.println(resistance);
+  // // Convert resistance to temperature using linear interpolation
+  // float temperature =
+  //     interpolate(resistance, resistanceTable, temperatureTable,
+  //                 sizeof(resistanceTable) / sizeof(resistanceTable[0]));
+  // // Print temperature to serial monitor
+  // Serial.print("Temperature: ");
+  // Serial.print(temperature);
+  // Serial.println("°C");
   int16_t val_23 = readChannel(ADS1115_COMP_2_3);
   Serial.print("CH 2-3 value: ");
   Serial.println(val_23);
-  delay(1000);
+  delay(5000);
 }
 #endif
 
@@ -200,6 +188,19 @@ int16_t readChannel(ADS1115_MUX channel) {
   while (adc.isBusy()) {
   }
   return adc.getResult_mV();
+}
+
+// Function to map a value from the range 0-255 to 0-3300
+float map_255_to_3300(uint8_t input_value) {
+  // Check if the input_value exceeds the upper limit of 255
+  if (input_value > 255) {
+    input_value = 255;  // Cap the value to 255
+  }
+
+  // Perform the scaling calculation with rounding
+  float output_value = (float)(input_value * 3300) / 255.0;
+
+  return output_value;  // Return the mapped value in the range 0-3300
 }
 
 // Function to map a value from the range 0-3300 to 0-255
@@ -220,20 +221,28 @@ uint8_t map_3300_to_255(uint16_t input_value) {
 }
 
 void singal_generate(void *parameter) {
-  // Define arrays for the values to be written to D3 and D4
-  uint16_t d3_values[] = {100, 100, 300, 500, 1000, 0, 0};
-  uint16_t d4_values[] = {100, 0, 0, 0, 0, 100, 300};
+  // Define arrays for the values to be written to D0 and D1
+  uint16_t D0_values[] = {100, 100, 300, 500, 1000, 0, 0};
+  uint16_t D1_values[] = {100, 0, 0, 0, 0, 100, 300};
 
   // Infinite loop
   while (true) {
     // Loop through the predefined values
     for (int i = 0; i < 7; i++) {
-      // Write the mapped values to D3 and D4
-      analogWrite(D3, map_3300_to_255(d3_values[i]));
-      analogWrite(D4, map_3300_to_255(d4_values[i]));
+      // Write the mapped values to D0 and D1
+      uint8_t D0_bin = map_3300_to_255(D0_values[i]);
+      uint8_t D1_bin = map_3300_to_255(D1_values[i]);
+
+      analogWrite(D0, D0_bin);
+      analogWrite(D1, D1_bin);
+
+      float D0_V = map_255_to_3300(D0_bin);
+      float D1_V = map_255_to_3300(D1_bin);
 
       // Delay for 1000 milliseconds (1 second)
-      vTaskDelay(xDelay1000ms);
+      Serial.printf("Generate signal D0: %.2f\t D1: %.2f\tdiff: %.2f\n", D0_V,
+                    D1_V, D0_V - D1_V);
+      vTaskDelay(xDelay5000ms);
     }
   }
 }
