@@ -9,11 +9,12 @@
  *(English)
  *
  ***************************************************************************/
+#include "main.h"
+
 #include <ADS1115_WE.h>
 #include <Arduino.h>
 #include <Wire.h>
 #include <math.h>
-#include "main.h"
 
 #define I2C_ADDRESS 0x48
 #define PT1000_R_REF 1000.0
@@ -202,24 +203,37 @@ int16_t readChannel(ADS1115_MUX channel) {
 }
 
 // Function to map a value from the range 0-3300 to 0-255
-uint8_t map_3300_to_255(uint16_t input_value)
-{
-    // Check if the input_value exceeds the upper limit of 3300
-    if (input_value > 3300) {
-        input_value = 3300; // Cap the value to 3300
-    }
+uint8_t map_3300_to_255(uint16_t input_value) {
+  // Check if the input_value exceeds the upper limit of 3300
+  if (input_value > 3300) {
+    input_value = 3300;  // Cap the value to 3300
+  }
 
-    // Perform the scaling calculation
-    uint8_t output_value = (uint8_t)((input_value * 255) / 3300);
+  // Perform the scaling calculation with rounding
+  float scaled_value = (float)(input_value * 255) / 3300.0;
 
-    return output_value; // Return the mapped value in the range 0-255
+  // Add 0.5 to ensure proper rounding
+  uint8_t output_value = (uint8_t)(scaled_value + 0.5);
+
+  return output_value;  // Return the mapped and rounded value in the range
+                        // 0-255
 }
 
 void singal_generate(void *parameter) {
+  // Define arrays for the values to be written to D3 and D4
+  uint16_t d3_values[] = {100, 100, 300, 500, 1000, 0, 0};
+  uint16_t d4_values[] = {100, 0, 0, 0, 0, 100, 300};
+
+  // Infinite loop
   while (true) {
-    analogWrite(D3, map_3300_to_255(100));
-    vTaskDelay(xDelay5000ms);
-    analogWrite(D3, 0);
-    vTaskDelay(xDelay5000ms);
+    // Loop through the predefined values
+    for (int i = 0; i < 7; i++) {
+      // Write the mapped values to D3 and D4
+      analogWrite(D3, map_3300_to_255(d3_values[i]));
+      analogWrite(D4, map_3300_to_255(d4_values[i]));
+
+      // Delay for 1000 milliseconds (1 second)
+      vTaskDelay(xDelay1000ms);
+    }
   }
 }
