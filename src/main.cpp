@@ -9,13 +9,23 @@
  *(English)
  *
  ***************************************************************************/
-#include <Arduino.h>
 #include <ADS1115_WE.h>
+#include <Arduino.h>
 #include <Wire.h>
 #include <math.h>
+#include "main.h"
+
 #define I2C_ADDRESS 0x48
 #define PT1000_R_REF 1000.0
 #define VCC_VOLTAGE 3300
+
+TaskHandle_t signal_generate_task = NULL;
+const TickType_t xDelay1000ms = pdMS_TO_TICKS(1000);
+const TickType_t xDelay5000ms = pdMS_TO_TICKS(5000);
+void singal_generate(void *parameter);
+
+#define D3 3
+#define D4 4
 
 int16_t readChannel(ADS1115_MUX channel);
 
@@ -49,9 +59,14 @@ float interpolate(float x, float xTable[], float yTable[], int size) {
   // Extrapolation if x is outside the range of the table
   return yTable[size - 1];
 }
+#ifndef UNIT_TEST
 void setup() {
   Wire.begin(7, 6);
   Serial.begin(9600);
+
+  pinMode(D3, OUTPUT);
+  pinMode(D4, OUTPUT);
+
   if (!adc.init()) {
     Serial.println("ADS1115 not connected!");
   }
@@ -146,7 +161,12 @@ void setup() {
   Serial.println("ADS1115 Example Sketch - Single Shot Mode");
   Serial.println("Channel / Voltage [V]: ");
   Serial.println();
+
+  // Create a multi-task for generate voltage for testing diff-amp ADS1115
+  xTaskCreatePinnedToCore(singal_generate, "singal_generatet", 2048, NULL, 1,
+                          &signal_generate_task, 1);
 }
+
 void loop() {
   int16_t val_0 = readChannel(ADS1115_COMP_0_GND);
   Serial.print("CH 0 value: ");
@@ -170,6 +190,8 @@ void loop() {
   Serial.println(val_23);
   delay(1000);
 }
+#endif
+
 int16_t readChannel(ADS1115_MUX channel) {
   int16_t result = 0;
   adc.setCompareChannels(channel);
@@ -177,4 +199,27 @@ int16_t readChannel(ADS1115_MUX channel) {
   while (adc.isBusy()) {
   }
   return adc.getResult_mV();
+}
+
+// Function to map a value from the range 0-3300 to 0-255
+uint8_t map_3300_to_255(uint16_t input_value)
+{
+    // Check if the input_value exceeds the upper limit of 3300
+    if (input_value > 3300) {
+        input_value = 3300; // Cap the value to 3300
+    }
+
+    // Perform the scaling calculation
+    uint8_t output_value = (uint8_t)((input_value * 255) / 3300);
+
+    return output_value; // Return the mapped value in the range 0-255
+}
+
+void singal_generate(void *parameter) {
+  while (true) {
+    analogWrite(D3, map_3300_to_255(100));
+    vTaskDelay(xDelay5000ms);
+    analogWrite(D3, 0);
+    vTaskDelay(xDelay5000ms);
+  }
 }
