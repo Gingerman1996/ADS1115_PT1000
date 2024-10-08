@@ -177,7 +177,7 @@ void loop() {
   int16_t val_23 = readChannel(ADS1115_COMP_2_3);
   Serial.print("CH 2-3 value: ");
   Serial.println(val_23);
-  delay(5000);
+  delay(1000);
 }
 #endif
 
@@ -242,7 +242,7 @@ void singal_generate(void *parameter) {
       // Delay for 1000 milliseconds (1 second)
       Serial.printf("Generate signal D0: %.2f\t D1: %.2f\tdiff: %.2f\n", D0_V,
                     D1_V, D0_V - D1_V);
-      vTaskDelay(xDelay5000ms);
+      vTaskDelay(xDelay1000ms);
     }
   }
 }
