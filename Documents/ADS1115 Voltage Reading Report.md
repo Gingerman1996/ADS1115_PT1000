@@ -90,7 +90,7 @@ In this part of the experiment, the **NO2** and **O3** sensors are connected to 
 - **NO2 Sensor Voltage (ADS1115)**: [value in mV]
 - **NO2 Sensor Voltage (Multimeter)**: [value in mV]
 
-![Video](Gif/IMG_6132.gif){ width="350" }
+![Video](Videos/IMG_6132.mp4)
 
 As seen in the results, the voltage readings from the **ADS1115** closely match those from the multimeter, confirming that the **ADS1115** accurately measures the voltage output from the **NO2** and **O3** sensors. These sensors' readings are critical for detecting gas concentrations, and the accuracy of the **ADS1115** ensures reliable data collection.
 
