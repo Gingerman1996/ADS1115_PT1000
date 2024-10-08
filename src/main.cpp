@@ -152,28 +152,28 @@ void setup() {
   Serial.println();
 
   // Create a multi-task for generate voltage for testing diff-amp ADS1115
-  xTaskCreatePinnedToCore(singal_generate, "singal_generatet", 2048, NULL, 1,
-                          &signal_generate_task, 1);
+  // xTaskCreatePinnedToCore(singal_generate, "singal_generatet", 2048, NULL, 1,
+  //                         &signal_generate_task, 1);
 }
 
 void loop() {
-  // int16_t val_0 = readChannel(ADS1115_COMP_0_GND);
-  // Serial.print("CH 0 value: ");
-  // Serial.println(val_0);
-  // Serial.print("CH 0 value: ");
-  // // Convert analog value to resistance
-  // float resistance = ((float)VCC_VOLTAGE * (float)PT1000_R_REF) /
-  //                    ((float)VCC_VOLTAGE - (float)val_0);
-  // Serial.print("CH 0 resistance: ");
-  // Serial.println(resistance);
-  // // Convert resistance to temperature using linear interpolation
-  // float temperature =
-  //     interpolate(resistance, resistanceTable, temperatureTable,
-  //                 sizeof(resistanceTable) / sizeof(resistanceTable[0]));
-  // // Print temperature to serial monitor
-  // Serial.print("Temperature: ");
-  // Serial.print(temperature);
-  // Serial.println("°C");
+  int16_t val_0 = readChannel(ADS1115_COMP_0_GND);
+  Serial.print("CH 0 value: ");
+  Serial.println(val_0);
+  Serial.print("CH 0 value: ");
+  // Convert analog value to resistance
+  float resistance = ((float)VCC_VOLTAGE * (float)PT1000_R_REF) /
+                     ((float)VCC_VOLTAGE - (float)val_0);
+  Serial.print("CH 0 resistance: ");
+  Serial.println(resistance);
+  // Convert resistance to temperature using linear interpolation
+  float temperature =
+      interpolate(resistance, resistanceTable, temperatureTable,
+                  sizeof(resistanceTable) / sizeof(resistanceTable[0]));
+  // Print temperature to serial monitor
+  Serial.print("Temperature: ");
+  Serial.print(temperature);
+  Serial.println("°C");
   int16_t val_23 = readChannel(ADS1115_COMP_2_3);
   Serial.print("CH 2-3 value: ");
   Serial.println(val_23);
