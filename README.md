@@ -1,91 +1,28 @@
-# ADS1115 Voltage Reading Report
+# Project: Connecting O-1PST Board to AFE: NO2, O3 Sensors using ADS1115 via I2C
 
-## Introduction
+## Project Objective
 
-This report covers the process of reading differential voltage values using ADS1115 and ESP32C3. The measured voltages include 0, 100, 300, 500, 1000, -100, and -300 mV. The purpose of this experiment is to verify if the ADS1115 can accurately measure the differential voltages applied to its inputs. For example, if a differential input voltage of 100 mV is applied, the report will evaluate the output value read by the ADS1115.
+This project aims to connect the **O-1PST board** to an **AFE sensor** designed for detecting gases like **NO2** and **O3**. The project uses the **ADS1115** ADC (Analog-to-Digital Converter) to convert the analog signals from the sensors into digital data, which is then transmitted to the board via the **I2C protocol** for further processing and display.
 
-## Methodology
+Additionally, a **custom PCB** was designed to integrate the ADS1115 with the sensors. The PCB allows for a seamless connection between the sensors and the board, ensuring stable and efficient signal transmission. The PCB was also designed to fit within the **O-1PST** case, making the entire setup compact and robust for deployment.
 
-The methodology involves generating predefined voltage signals at pins D0 and D1 of the ESP32C3 microcontroller. These voltages are then connected to the A2 and A3 inputs of the ADS1115, which operates in differential mode to measure the voltage difference. The process includes mapping values between a 0-3300 mV range and a 0-255 binary range, enabling the ESP32C3 to output specific voltages.
+## Components Used
 
-In the code, predefined arrays for D0 and D1 voltages are set to values such as 100, 300, 500, 1000 mV, and 0 mV for both pins. The ESP32C3 then writes the corresponding binary values to D0 and D1 using the `analogWrite` function. The differential voltage between D0 and D1 is calculated and printed to the serial monitor. The process repeats for each pair of voltages with a delay of 5 seconds between each iteration.
+- **O-1PST Board**: The main board for processing and control.
+- **AFE (Analog Front-End) Sensor**: Sensors for detecting NO2 and O3 gases.
+- **ADS1115**: A 16-bit ADC that converts analog signals to digital, communicating via I2C.
+- **Custom PCB**: A printed circuit board designed for integrating ADS1115 with the sensors, compatible with the O-1PST case.
 
-## Code Implementation
+## Project Workflow
 
-The full code implementation can be found on the GitHub repository at the following link:
+1. The **AFE sensor** measures the concentration of NO2 and O3 gases and outputs an analog signal.
+2. The **ADS1115** converts the analog signal from the sensors into a digital format.
+3. A **custom PCB** connects the ADS1115 to the sensors and the O-1PST board, ensuring proper signal routing.
+4. The digital data is transmitted via the **I2C protocol** to the **O-1PST board**, where the data is processed and displayed.
 
-[GitHub Repository: ADS1115 Voltage Reading on ESP32C3](https://github.com/Gingerman1996/ADS1115_PT1000.git)
+## Reports
 
-This signal generation function was added to the code originally developed by Xin. It is used to generate specific voltage signals on pins D0 and D1 of the ESP32C3, which helps in testing the differential voltage reading of the ADS1115.
+You can access the project reports from the links below:
 
-```cpp
-// Function to map a value from the range 0-255 to 0-3300
-float map_255_to_3300(uint8_t input_value) {
-    // Check if the input_value exceeds the upper limit of 255
-    if (input_value > 255) {
-        input_value = 255;  // Cap the value to 255
-    }
-
-    // Perform the scaling calculation with rounding
-    float output_value = (float)(input_value * 3300) / 255.0;
-
-    return output_value;  // Return the mapped value in the range 0-3300
-}
-
-// Function to map a value from the range 0-3300 to 0-255
-uint8_t map_3300_to_255(uint16_t input_value) {
-    // Check if the input_value exceeds the upper limit of 3300
-    if (input_value > 3300) {
-        input_value = 3300;  // Cap the value to 3300
-    }
-
-    // Perform the scaling calculation with rounding
-    float scaled_value = (float)(input_value * 255) / 3300.0;
-
-    // Add 0.5 to ensure proper rounding
-    uint8_t output_value = (uint8_t)(scaled_value + 0.5);
-
-    return output_value;  // Return the mapped and rounded value in the range 0-255
-}
-
-void signal_generate(void *parameter) {
-    // Define arrays for the values to be written to D0 and D1
-    uint16_t D0_values[] = {100, 100, 300, 500, 1000, 0, 0};
-    uint16_t D1_values[] = {100, 0, 0, 0, 0, 100, 300};
-
-    // Infinite loop
-    while (true) {
-        // Loop through the predefined values
-        for (int i = 0; i < 7; i++) {
-            // Write the mapped values to D0 and D1
-            uint8_t D0_bin = map_3300_to_255(D0_values[i]);
-            uint8_t D1_bin = map_3300_to_255(D1_values[i]);
-
-            analogWrite(D0, D0_bin);
-            analogWrite(D1, D1_bin);
-
-            float D0_V = map_255_to_3300(D0_bin);
-            float D1_V = map_255_to_3300(D1_bin);
-
-            // Delay for 1000 milliseconds (1 second)
-            Serial.printf("Generate signal D0: %.2f\t D1: %.2f\tdiff: %.2f\n", D0_V, D1_V, D0_V - D1_V);
-            vTaskDelay(xDelay5000ms);
-        }
-    }
-}
-```
-This function generates specific signal voltages to simulate different scenarios, which helps to test the accuracy of the ADS1115 in reading differential voltages.
-
-## Results
-
-The results of the experiment show the generated voltage signals on D0 and D1 pins of the ESP32C3 board. These voltages are measured in millivolts (mV). The "diff" column represents the differential voltage between D0 and D1, while the "CH2-3" column shows the corresponding voltage values as measured by the ADS1115 in millivolts (mV).
-
-![Voltage Measurement Results](Screenshot 2024-10-03 150956.png)
-
-D0 and D1 are the voltages generated by the board, measured in millivolts (mV). "diff" is the differential voltage, and "CH2-3" shows the values read by ADS1115 in millivolts (mV).
-
-As seen in the image, the generated signal voltages range from 0 mV to around 1000 mV, with the differential values between D0 and D1 corresponding to the readings from ADS1115, which are shown in the "CH2-3" values. The experiment confirms that ADS1115 accurately measures differential voltages.
-
-## Conclusion
-
-Based on the experiment, the ADS1115 demonstrates accuracy in reading differential voltages when integrated with ESP32C3.
+- [ADS1115 Voltage Reading Report](./path_to_your_report/report_design.md)
+- [PCB Design Report](./path_to_your_report/report_testing.md)
