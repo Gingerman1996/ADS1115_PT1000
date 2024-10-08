@@ -25,4 +25,4 @@ Additionally, a **custom PCB** was designed to integrate the ADS1115 with the se
 You can access the project reports from the links below:
 
 - [ADS1115 Voltage Reading Report](Documents/ADS1115%20Voltage%20Reading%20Report.md)
-- [PCB Design Report](./path_to_your_report/report_testing.md)
+- [PCB Design Report](Documents/PCB%20Design%20Report.md)
